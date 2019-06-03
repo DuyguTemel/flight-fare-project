@@ -6,6 +6,7 @@ import com.dtemel.ms.flightschedule.service.FlightScheduleService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RefreshScope
 public class FlightScheduleServiceImpl implements FlightScheduleService {
 
     @Value("${airline.disabled}")
@@ -33,9 +35,9 @@ public class FlightScheduleServiceImpl implements FlightScheduleService {
 
 
         List<Flight> flightList = flightScheduleRepository.findAll(flightFilter);
-//        if (!CollectionUtils.isEmpty(flightList)) {
-//            flightList = flightList.stream().filter(flight1 -> airlineDisabled.equals(flight.getAirline())).collect(Collectors.toList());
-//        }
+        if (!CollectionUtils.isEmpty(flightList)) {
+            flightList = flightList.stream().filter(flight1 -> !airlineDisabled.equals(flight1.getAirline())).collect(Collectors.toList());
+        }
         return flightList;
 
     }
