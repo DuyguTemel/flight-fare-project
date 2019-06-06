@@ -3,6 +3,7 @@ package com.dtemel.ms.flightfare.controller;
 import com.dtemel.ms.flightfare.dao.FlightFareRepository;
 import com.dtemel.ms.flightfare.models.CurrencyConversion;
 import com.dtemel.ms.flightfare.models.FlightFare;
+import com.netflix.discovery.EurekaClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Example;
@@ -20,6 +21,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/flight/{flightCode}/fare/{currency}")
 public class FlightFareController {
+
+    @Autowired
+    RestTemplate restTemplate;
 
     @Autowired
     private FlightFareRepository flightFareRepository;
@@ -48,12 +52,12 @@ public class FlightFareController {
     }
 
     private BigDecimal getConversion(String toCurrency) {
-        RestTemplate restTemplate = new RestTemplate();
+//        RestTemplate restTemplate = new RestTemplate();
         Map<String, String> urlPathVariable = new HashMap<>();
         urlPathVariable.put("from", baseCurrency);
         urlPathVariable.put("to", toCurrency);
 
-        ResponseEntity<CurrencyConversion> responseEntity = restTemplate.getForEntity("http://localhost:7101/api/v1/from/{from}/to/{to}", CurrencyConversion.class, urlPathVariable);
+        ResponseEntity<CurrencyConversion> responseEntity = restTemplate.getForEntity("http://currency-conversion/api/v1/from/{from}/to/{to}", CurrencyConversion.class, urlPathVariable);
         return responseEntity.getBody().getConversionRate();
     }
 }
