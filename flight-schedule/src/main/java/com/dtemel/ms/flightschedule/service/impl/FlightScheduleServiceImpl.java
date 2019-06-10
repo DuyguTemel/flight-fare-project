@@ -6,12 +6,12 @@ import com.dtemel.ms.flightschedule.service.FlightScheduleService;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -20,14 +20,14 @@ import java.util.stream.Collectors;
 @RefreshScope
 public class FlightScheduleServiceImpl implements FlightScheduleService {
 
-//    @Value("${airline.disabled}")
-    private String airlineDisabled="ESB";
+    //    @Value("${airline.disabled}")
+    private String airlineDisabled = "ESB";
 
     @Autowired
     FlightScheduleRepository flightScheduleRepository;
 
-    @HystrixCommand(commandProperties = {
-            @HystrixProperty(name="execution.isolation.thread.timeoutInMilliseconds",value="7000")
+    @HystrixCommand(fallbackMethod = "buildFallbackFlights", commandProperties = {
+            @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "3000")
     })
     @Override
     public List<Flight> getFlights(String from, String to) {
@@ -42,6 +42,22 @@ public class FlightScheduleServiceImpl implements FlightScheduleService {
         if (!CollectionUtils.isEmpty(flightList)) {
             flightList = flightList.stream().filter(flight1 -> !airlineDisabled.equals(flight1.getAirline())).collect(Collectors.toList());
         }
+        return flightList;
+
+    }
+
+    public List<Flight> buildFallbackFlights(String from, String to) {
+        Flight flight = new Flight();
+        flight.setId(0L);
+        flight.setFlightFrom(from);
+        flight.setFlightTo(to);
+        flight.setFlightCode("Sorry!! No flight available");
+        flight.setAirline("N/A");
+        flight.setDepartureTime("N/A");
+        flight.setArrivalTime("N/A");
+
+        List<Flight> flightList = new ArrayList<>();
+        flightList.add(flight);
         return flightList;
 
     }
